@@ -78,7 +78,7 @@ function prepareRemoteConection(){
   window.rpc = rpc;
 
   rpc.onicecandidate = rOnicecandidate;
-  rpc.onaddStream = rOnaddStream;
+  rpc.onaddstream = rOnaddStream;
 
 }
 
