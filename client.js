@@ -18,6 +18,10 @@ $(document).ready(function(){
     })
   })
 
+	$('#send').click(function(){
+		console.log("Send")
+		window.ldc.send($("#tlocal").val()+'\n')
+	})
 })
 
 
@@ -32,10 +36,15 @@ function prepareLocalConection(){
   var configuration = null;
 
   var lpc = new webkitRTCPeerConnection(configuration)
+	var ldc = lpc.createDataChannel(null)
   window.lpc = lpc;
+	window.ldc = ldc;
 
   lpc.onicecandidate = lOnicecandidate;
   lpc.onnegotiationneeded = lOnnegotiationneeded;
+
+	ldc.onopen = ldcopen;
+	ldc.onclose = ldconclose;
 
 }
 
@@ -71,6 +80,16 @@ function lOnnegotiationneeded(){
   })
 }
 
+function ldcopen(){
+	console.log("Local Data channel opened")
+}
+
+function ldconclose(){
+	console.log("Local data channel closed")
+}
+
+
+
 function prepareRemoteConection(){
   var configuration = null;
 
@@ -79,7 +98,7 @@ function prepareRemoteConection(){
 
   rpc.onicecandidate = rOnicecandidate;
   rpc.onaddstream = rOnaddStream;
-
+	rpc.ondatachannel = rdcOndataChannel;
 }
 
 function rOnicecandidate(){
@@ -99,6 +118,18 @@ function rOnaddStream(event){
     $("#remote")[0].srcObject = event.stream;
 }
 
+
+function rdcOndataChannel(event){
+	console.log("OnData Channel")
+	var rdc = event.channel;
+	window.rdc = rdc;
+	rdc.onmessage = rdcOnMessage;
+}
+
+function rdcOnMessage(event){
+	var data = event.data;
+	$("#tremote").append(data);
+}
 
 function launch(){
 
