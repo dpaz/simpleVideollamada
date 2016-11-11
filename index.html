@@ -5,6 +5,7 @@
 
   <title>Realtime communication with WebRTC</title>
 
+  <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
   <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
   <script src="/client.js" type="text/javascript"></script>
 
@@ -14,18 +15,20 @@
 <body>
 
   <h1>Realtime communication with WebRTC</h1>
-
-  <button id="start">Start</button>
-  <button id="stop">Stop</button>
+  <p>Nombre:<input type="text" id="name"></input>
+  Sala: <input type="text" id="room"></inpt>
+  <button id="login" disabled >Login</button></p>
+  <!--<button id="start" disabled="">Start</button>
+  <button id="stop">Stop</button>-->
   <br>
   <div>
     <video autoplay id="local"></video>
     <video autoplay id="remote"></video>
   </div>
-  <button id="send">Send</button>
+  <button id="send" disabled>Send</button>
   <div>
-    <textarea id="tlocal" rows="6" cols="60">Click on send</textarea>
-    <textarea id="tremote" rows="6" cols="60"></textarea>
+    <textarea id="tlocal" rows="6" cols="75">Click on send</textarea>
+    <textarea id="tremote" rows="6" cols="75"></textarea>
   </div>
 </body>
 

@@ -1,15 +1,14 @@
 $(document).ready(function(){
 
-
 	var errorElement = document.querySelector('#errorMsg');
 
-
+/*
   $('#start').click(function(){
     console.log("Play")
     onStart()
 
   })
-
+*/
 
   $('#stop').click(function(){
     console.log("Stop")
@@ -22,6 +21,40 @@ $(document).ready(function(){
 		console.log("Send")
 		window.ldc.send($("#tlocal").val()+'\n')
 	})
+
+	var socket = io.connect('localhost:3000');
+	window.socket = socket;
+  window.name = undefined
+  window.room = undefined
+  socket.on('connect',function(){
+    console.log("Conectado");
+		$('#login').prop('disabled', false);
+  })
+  $('#login').click(function(){
+    window.name = $('#name').val();
+    window.room = $('#room').val();
+    console.log("Loged as "+name+":"+room)
+    socket.emit('join',{name:name ,room:room});
+  })
+  socket.on('err',function(mess){
+    console.log(mess.errstr)
+  })
+
+	//Hay que cambiar todo lo del peer conection para que sean el mismo y no diferentes
+  socket.on('reqinvite',function(mess){
+
+    //Como conseguir el sdp
+		prepareLocalConection()
+    console.log(mess.name+" se ha unido a la sala, enviando sdp")
+  })
+
+  socket.on('invite',function(mess){
+		console.log("Recibido SDP de: "+mess.name)
+  	prepareRemoteConection()
+		launchRemoteNegotiation(mess.sdp)
+  })
+
+
 })
 
 
@@ -52,24 +85,21 @@ function lOnicecandidate(event){
     console.log("Local candidate")
 
     if(event.candidate){
-      rpc.addIceCandidate(
-        new RTCIceCandidate(event.candidate)
-      )
-      .then()
-      .catch(function(error){
-        console.log(error);
-      })
+      //Programar ice candidate
+			console.log("tienes que programar el local ICE candidate")
+
     }
 }
 
 function lOnnegotiationneeded(){
   console.log("Local negotiation")
 
-  window.lpc.createOffer(constraints)
+  window.lpc.createOffer(null)
   .then(function(sdp){
       lpc.setLocalDescription(sdp)
       .then(function(){
-        launchRemoteNegotiation(sdp)
+
+        window.socket.emit('invite',{sdp:sdp ,name:window.name});
       })
       .catch(function(err){
         console.log(err);
@@ -104,13 +134,8 @@ function prepareRemoteConection(){
 function rOnicecandidate(){
     console.log("Remote candidate")
     if(event.candidate){
-      lpc.addIceCandidate(
-        new RTCIceCandidate(event.candidate)
-      )
-      .then()
-      .catch(function(error){
-        console.log(error);
-      })
+      //Tienes que programar el ice candidate
+			console.log("Tienes que programar el remote ICE candidate")
     }
 }
 function rOnaddStream(event){
@@ -177,9 +202,12 @@ function finishLocalNegotiation(sdpAnswer){
   console.log("Finishing Negotiation")
 
   window.rpc.setLocalDescription(sdpAnswer)
-  .then()
+  .then(
+		window.socket.emit('ok',{sdp:sdpAnswer,name:window.name})
+	)
   .catch(function(error){
     console.log(error);
+		window.socket.emit('err',error)
   })
 
   window.lpc.setRemoteDescription(sdpAnswer)
@@ -188,3 +216,57 @@ function finishLocalNegotiation(sdpAnswer){
     console.log(error);
   })
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+
+$(document).ready(function(){
+
+
+
+  socket.on('err',function(mess){
+    console.log(mess.errstr)
+  })
+  socket.on('reqinvite',function(mess){
+
+    //Como conseguir el sdp
+
+    console.log(mess.name+" se ha unido a la sala, enviando sdp")
+  })
+
+  socket.on('invite',function(mess){
+    //programar el mensaje ok
+  })
+})
+
+
+
+$('#login').click(function(){
+    name = $('#name').val();
+    room = $('#room').val();
+    console.log(name+":"+room)
+    socket.emit('join',{name:name ,room:room});
+});
+$('#send').click(function(){
+    socket.emit('mess',{name:name ,room:room,mess:$('#mess').val()});
+    $('#chat').append('<p>'+name+':  '+$('#mess').val()+'</p>');
+})
+socket.on('update',function(message){
+    console.log("Mensaje recibido en el cliente")
+    $('#chat').append('<p>'+message.name+':  '+message.mess+'</p>');
+})
+*/
