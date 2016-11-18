@@ -46,7 +46,11 @@ io.on('connection',function(socket){
     socket.broadcast.to(socket.room).emit('ok',{sdp:mess.sdp,name:mess.name})
   });
   socket.on('err',function(mess){
-    console.log("Ha ocurrido un error "+mess)
+    console.log("Ha ocurrido un error "+mess.errstr)
+  });
+  socket.on('candidate',function(mess){
+    console.log("Recibido canidato de :"+ mess.name)
+    socket.broadcast.to(socket.room).emit('candidate',{candidate:mess.candidate,name:mess.name})
   })
 });
 

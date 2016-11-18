@@ -44,7 +44,9 @@ $(document).ready(function(){
   socket.on('reqinvite',function(mess){
 
     //Como conseguir el sdp
+
 		prepareLocalConection()
+		launch()
     console.log(mess.name+" se ha unido a la sala, enviando sdp")
   })
 
@@ -55,45 +57,70 @@ $(document).ready(function(){
   })
 
 
+	socket.on('candidate',function(mess){
+		candidate = new RTCIceCandidate(mess.candidate)
+		if(window.lpc!= undefined){
+			lpc.addIceCandidate(candidate)
+			.then(rOnaddStream())
+      .catch(function(error){
+        console.log(error);
+				console.log(mess.candidate)
+      })
+
+			console.log("Añadido ICE local")
+		}else{
+			rpc.addIceCandidate(candidate)
+			.then()
+      .catch(function(error){
+        console.log(error);
+      })
+
+			console.log("Añdido ICE Remoto")
+		}
+	})
+
+	socket.on('ok',function(mess){
+		console.log("Recibido mensaje ok")
+		lpc.setRemoteDescription(mess.sdp)
+		.catch(function(err){
+			console.log(err);
+		})
+	})
+
+
 })
 
 
 
-function onStart(){
-  prepareLocalConection();
-  prepareRemoteConection();
-  launch();
-}
 
 function prepareLocalConection(){
   var configuration = null;
 
   var lpc = new webkitRTCPeerConnection(configuration)
-	var ldc = lpc.createDataChannel(null)
+	//var ldc = lpc.createDataChannel(null)
   window.lpc = lpc;
-	window.ldc = ldc;
+	//window.ldc = ldc;
 
   lpc.onicecandidate = lOnicecandidate;
   lpc.onnegotiationneeded = lOnnegotiationneeded;
 
-	ldc.onopen = ldcopen;
-	ldc.onclose = ldconclose;
+	lpc.onaddstream = rOnaddStream;
+
+	//ldc.onopen = ldcopen;
+	//ldc.onclose = ldconclose;
 
 }
 
 function lOnicecandidate(event){
     console.log("Local candidate")
 
-    if(event.candidate){
-      //Programar ice candidate
-			console.log("tienes que programar el local ICE candidate")
-
-    }
+		if(event.candidate){
+			window.socket.emit('candidate',{name:window.name,candidate:event.candidate})
+		}
 }
 
 function lOnnegotiationneeded(){
   console.log("Local negotiation")
-
   window.lpc.createOffer(null)
   .then(function(sdp){
       lpc.setLocalDescription(sdp)
@@ -133,15 +160,18 @@ function prepareRemoteConection(){
 
 function rOnicecandidate(){
     console.log("Remote candidate")
+
     if(event.candidate){
-      //Tienes que programar el ice candidate
-			console.log("Tienes que programar el remote ICE candidate")
+			window.socket.emit('candidate',{name:window.name,candidate:event.candidate})
     }
+
+
 }
 function rOnaddStream(event){
     console.log("Remote stream")
     $("#remote")[0].srcObject = event.stream;
 }
+
 
 
 function rdcOndataChannel(event){
@@ -158,7 +188,6 @@ function rdcOnMessage(event){
 
 function launch(){
 
-  var lvideo = $('#local')[0];
 	var constraints = window.constraints = {
 		audio: false,
 		video: true
@@ -167,13 +196,37 @@ function launch(){
   .then(function(stream){
 
     window.stream = stream;
-    lvideo.srcObject = stream;
+
 
     if(window.lpc == undefined){
       console.log("No hay peerConection")
     }
 
     window.lpc.addStream(stream);
+		$("#local")[0].srcObject = stream;
+  })
+  .catch(function(error){
+    console.log(error);
+  })
+}
+
+function rlaunch(){
+	var constraints = window.constraints = {
+		audio: false,
+		video: true
+  };
+  navigator.mediaDevices.getUserMedia(constraints)
+  .then(function(stream){
+		console.log("Entro dentro de la promesa")
+    window.stream = stream;
+
+
+    if(window.rpc == undefined){
+      console.log("No hay peerConection")
+    }
+
+    window.rpc.addStream(stream);
+		$("#local")[0].srcObject = stream;
   })
   .catch(function(error){
     console.log(error);
@@ -183,6 +236,7 @@ function launch(){
 
 function launchRemoteNegotiation(sdpOffer){
   console.log("Remote Negotiation")
+	rlaunch()
   window.rpc.setRemoteDescription(sdpOffer)
   .then(function(){
     window.rpc.createAnswer()
@@ -210,63 +264,11 @@ function finishLocalNegotiation(sdpAnswer){
 		window.socket.emit('err',error)
   })
 
-  window.lpc.setRemoteDescription(sdpAnswer)
-  .then()
-  .catch(function(error){
-    console.log(error);
-  })
+
 }
 
 
 
+//MIrar el setLocalDescription
 
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-
-$(document).ready(function(){
-
-
-
-  socket.on('err',function(mess){
-    console.log(mess.errstr)
-  })
-  socket.on('reqinvite',function(mess){
-
-    //Como conseguir el sdp
-
-    console.log(mess.name+" se ha unido a la sala, enviando sdp")
-  })
-
-  socket.on('invite',function(mess){
-    //programar el mensaje ok
-  })
-})
-
-
-
-$('#login').click(function(){
-    name = $('#name').val();
-    room = $('#room').val();
-    console.log(name+":"+room)
-    socket.emit('join',{name:name ,room:room});
-});
-$('#send').click(function(){
-    socket.emit('mess',{name:name ,room:room,mess:$('#mess').val()});
-    $('#chat').append('<p>'+name+':  '+$('#mess').val()+'</p>');
-})
-socket.on('update',function(message){
-    console.log("Mensaje recibido en el cliente")
-    $('#chat').append('<p>'+message.name+':  '+message.mess+'</p>');
-})
-*/
+//me falta programar el OK set remote description
