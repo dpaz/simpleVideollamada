@@ -13,6 +13,10 @@ app.get('/client.js',function(req,res){
   res.sendFile(__dirname+ '/client.js');
 })
 
+app.get('/client2.js',function(req,res){
+  res.sendFile(__dirname+ '/client2.js');
+})
+
 io.on('connection',function(socket){
   socket.on('join', function(mess){
     if (mess.room in rooms){
@@ -49,7 +53,7 @@ io.on('connection',function(socket){
     console.log("Ha ocurrido un error "+mess.errstr)
   });
   socket.on('candidate',function(mess){
-    console.log("Recibido canidato de :"+ mess.name)
+    console.log("Recibido candidato de :"+ mess.name)
     socket.broadcast.to(socket.room).emit('candidate',{candidate:mess.candidate,name:mess.name})
   })
 });
