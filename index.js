@@ -17,6 +17,10 @@ app.get('/client2.js',function(req,res){
   res.sendFile(__dirname+ '/client2.js');
 })
 
+app.get('/gl-matrix-min.js',function(req,res){
+  res.sendFile(__dirname+ '/gl-matrix-min.js');
+})
+
 io.on('connection',function(socket){
   socket.on('join', function(mess){
     if (mess.room in rooms){

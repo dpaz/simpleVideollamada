@@ -10,6 +10,29 @@ $(document).ready(function(){
   })
 */
 
+	var ballangley = 0.01*Math.random();
+	var ballsumy=Math.random() < 0.5 ? -1 : 1;;
+	var ballanglex = 0.01*Math.random();
+	var ballsumx=Math.random() < 0.5 ? -1 : 1;;
+
+	var rak1angley = 0.00;
+	var rak1anglex = 1.00;
+	var rak2angley = 0.00;
+	var rak2anglex = -1.00;
+
+	window.rak1angley = rak1angley;
+	window.rak1anglex = rak1anglex;
+	window.rak2angley = rak2angley;
+	window.rak2anglex = rak2anglex;
+
+	window.ballangley= ballangley;
+	window.ballsumy = ballsumy;
+	window.ballanglex = ballanglex;
+	window.ballsumx = ballsumx;
+	window.count = 0;
+
+
+
   $('#stop').click(function(){
     console.log("Stop")
     window.stream.getVideoTracks().forEach(function(closeTrack){
@@ -22,6 +45,7 @@ $(document).ready(function(){
     window.room = $('#room').val();
     console.log("Loged as "+name+":"+room)
     socket.emit('join',{name:name ,room:room});
+
   })
 	$('#send').click(function(){
 		console.log("Send")
@@ -53,6 +77,7 @@ $(document).ready(function(){
   	prepareConection()
 		launchRemoteNegotiation(mess.sdp)
 		$('#send').prop('disabled', false);
+		initWebGL()
   })
 	socket.on('ok',function(mess){
 		console.log("Recibido mensaje ok")
@@ -61,6 +86,7 @@ $(document).ready(function(){
 		.catch(function(err){
 			console.log(err);
 		})
+		initWebGL()
 	})
 	socket.on('candidate',function(mess){
 		candidate = new RTCIceCandidate(mess.candidate)
@@ -94,6 +120,11 @@ $(document).ready(function(){
 			dc.onclose = dconclose;
 			dc.onmessage = dcOnMessage;
 			window.dc = dc;
+
+			var gc = pc.createDataChannel(null)
+			gc.onmessage =  gcOnMessage;
+			window.gc = gc;
+
 		}else{
 			pc.ondatachannel = dcOndataChannel;
 		}
@@ -108,23 +139,25 @@ $(document).ready(function(){
 	}
 
 	function dcOndataChannel(event){
-		console.log("OnData Channel")
-		var dc = event.channel;
-		window.dc = dc;
-		dc.onmessage = dcOnMessage;
+		if(window.count==0){
+			console.log("OnData Channel")
+			window.count = window.count+1;
+			var dc = event.channel;
+			window.dc = dc;
+			dc.onmessage = dcOnMessage;
+		}else{
+			console.log("Game Channel")
+			var gc = event.channel;
+			window.gc = gc;
+			gc.onmessage = gcOnMessage;
+		}
+
 	}
 
 	function dcOnMessage(event){
 		var data = event.data;
 		$("#tremote").append(data);
 	}
-
-
-
-
-
-
-
 
 	function Onicecandidate(event){
 	    console.log("Local candidate")
@@ -202,7 +235,6 @@ $(document).ready(function(){
 
 	}
 
-
 	//Este metodo esta mal hecho,funciona por que es todo en local
 	function finishLocalNegotiation(sdpAnswer){
 	  console.log("Finishing Negotiation")
@@ -215,6 +247,43 @@ $(document).ready(function(){
 			window.socket.emit('err',error)
 	  })
 	}
+
+
+
+	function gcOnMessage(event){
+		var aux = event.data
+
+		if(aux[rak1angley]!=undefined){
+			window.rak1angley = aux[rak1angley]
+		}else if (aux[rak2angley]!= undefined) {
+			window.rak2angley = aux[rak2angley]
+		}else{
+			window.ballangley = aux[ballangley]
+			window.ballanglex = aux[ballanglex]
+		}
+	}
+//no esta funcionando como un diccionario  aunque pensaba que si revisar
+/*
+
+	socket.on('ballsend',function(ball){
+	  var aux = JSON.parse(ball);
+	  ballangley = aux.ballangley;
+	  ballanglex = aux.ballanglex;
+	})
+
+	socket.on('racketsend',function(rack){
+	  if(first){
+	    rak2angley = rack;
+	  }else{
+	    rak1angley = rack;
+	  }
+	})
+*/
+
+
+
+
+
 
 
 

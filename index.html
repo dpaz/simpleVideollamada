@@ -14,6 +14,8 @@
 
 <body>
 
+
+
   <h1>Realtime communication with WebRTC</h1>
   <p>Nombre:<input type="text" id="name"></input>
   Sala: <input type="text" id="room"></inpt>
@@ -24,14 +26,274 @@
 
   <br>
   <div>
-    <video autoplay id="local"></video>
-    <video autoplay id="remote"></video>
+    <video autoplay id="local" width="300" height="300"></video>
+    <canvas id="my-canvas" width="500" height="350">
+      Your browser does not support the HTML5 canvas element.
+    </canvas>
+    <video autoplay id="remote" width="300" height="300"></video>
   </div>
   <button id="send" disabled>Send</button>
   <div>
-    <textarea id="tlocal" rows="6" cols="75">Click on send</textarea>
-    <textarea id="tremote" rows="6" cols="75"></textarea>
+    <textarea id="tlocal" rows="6" cols="67">Click on send</textarea>
+
+    <textarea id="tremote" rows="6" cols="67"></textarea>
   </div>
+
+
+  <style>
+    canvas {
+        background-color: black;
+    }
+  </style>
+
+
+
+<script src="gl-matrix-min.js"></script>
+<script id="shader-vs" type="x-shader/x-vertex">
+  attribute vec3 aVertexPosition;
+  attribute vec3 aVertexColor;
+  varying highp vec4 vColor;
+
+  uniform mat4 uMVMatrix;
+  uniform mat4 uPMatrix;
+  void main(void) {
+       gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+  vColor = vec4(aVertexColor, 1.0);
+  }
+</script>
+<script id="shader-fs" type="x-shader/x-fragment">
+  varying highp vec4 vColor;
+  void main(void) {
+      gl_FragColor = vColor;
+  }
+</script>
+
+<script>
+    var gl = null,
+    canvas = null,
+    glProgram = null,
+    fragmentShader = null,
+    vertexShader = null;
+    var vertexPositionAttribute = null,
+        trianglesVerticeBuffer = null;
+    var vertexColorAttribute = null,
+        trianglesColorBuffer = null;
+  var mvMatrix = mat4.create();
+    function initWebGL() {
+        canvas = document.getElementById("my-canvas");
+        try {
+            gl = canvas.getContext("webgl") ||
+                 canvas.getContext("experimental-webgl");
+        } catch (e) {
+        }
+        if (gl) {
+            initShaders();
+            setupBuffers();
+            getUniforms();
+            setupWebGL();
+            drawScene();
+
+        } else {
+            alert("Error: Your browser does not appear to support WebGL.");
+        }
+    }
+    function setupWebGL() {
+        //set the clear color to a shade of green
+        gl.clearColor(0.0, 0.0, 0.0, 0.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    function initShaders() {
+        //get shader source
+        var fs_source = document.getElementById('shader-fs').innerHTML,
+         vs_source = document.getElementById('shader-vs').innerHTML;
+        //compile shaders
+        vertexShader = makeShader(vs_source, gl.VERTEX_SHADER);
+        fragmentShader = makeShader(fs_source, gl.FRAGMENT_SHADER);
+        //create program
+        glProgram = gl.createProgram();
+        //attach and link shaders to the program
+        gl.attachShader(glProgram, vertexShader);
+        gl.attachShader(glProgram, fragmentShader);
+        gl.linkProgram(glProgram);
+        if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
+            alert("Unable to initialize the shader program.");
+        }
+        //use program
+        gl.useProgram(glProgram);
+    }
+    function makeShader(src, type) {
+        //compile the vertex shader
+        var shader = gl.createShader(type);
+        gl.shaderSource(shader, src);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            alert("Error compiling shader: " + gl.getShaderInfoLog(shader));
+        }
+        return shader;
+    }
+    function setupBuffers() {
+        var triangleVertices = [
+            //triangle Vertices
+            -0.05, 0.05, 0.0,
+            0.05, -0.05, 0.0,
+            -0.05, -0.05, 0.0,
+            //Up triangle
+            0.05, 0.05, 0.0,
+            -0.05, 0.05, 0.0,
+            0.05, -0.05, 0.0,
+        ];
+        trianglesVerticeBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, trianglesVerticeBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices), gl.STATIC_DRAW);
+
+  var triangleColors = [
+            // triangle Colors
+            1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0,
+        ];
+        trianglesColorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, trianglesColorBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleColors), gl.STATIC_DRAW);
+    }
+    function drawScene() {
+        vertexPositionAttribute = gl.getAttribLocation(glProgram, "aVertexPosition");
+        gl.enableVertexAttribArray(vertexPositionAttribute);
+        gl.bindBuffer(gl.ARRAY_BUFFER, trianglesVerticeBuffer);
+        gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+
+        vertexColorAttribute = gl.getAttribLocation(glProgram, "aVertexColor");
+        gl.enableVertexAttribArray(vertexColorAttribute);
+        gl.bindBuffer(gl.ARRAY_BUFFER, trianglesColorBuffer);
+        gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
+
+        drawball()
+        raqueta1()
+        raqueta2()
+        requestAnimationFrame(drawScene)
+    }
+
+
+    function drawball(){
+      if(window.leader){
+        if(window.ballangley>=0.95 || window.ballangley<=-0.95){
+            window.ballsumy=window.ballsumy*(-1)
+        }else if(window.ballanglex>=1.20 || window.ballanglex<=-1.20){
+             window.ballangley=0
+             window.ballanglex=0
+        }else if((Math.floor(window.ballanglex+0.1)==window.rak1anglex) && (window.ballangley-window.rak1angley>-0.08 && window.ballangley-window.rak1angley<0.15)){
+            window.ballsumx=(-1)
+
+        }else if((Math.ceil(window.ballanglex-0.1)==window.rak2anglex) && (window.ballangley-window.rak2angley>-0.08 && window.ballangley-window.rak2angley<0.15)){
+            ballsumx=(1)
+
+        }
+        window.ballangley += (0.01*window.ballsumy);
+        window.ballanglex += (0.005*window.ballsumx);
+
+      }
+      mat4.identity(mvMatrix);
+      mat4.translate(mvMatrix, [ballanglex , ballangley, 0.0]);
+      gl.uniformMatrix4fv(glProgram.uMVMatrix, false, mvMatrix);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+
+    function raqueta1(){
+      mat4.identity(mvMatrix);
+      mat4.translate(mvMatrix, [rak1anglex , rak1angley, 0.0]);
+      mat4.scale(mvMatrix, [1, 4, 0]);
+      gl.uniformMatrix4fv(glProgram.uMVMatrix, false, mvMatrix);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+
+    function raqueta2(){
+      mat4.identity(mvMatrix);
+      mat4.translate(mvMatrix, [rak2anglex , rak2angley, 0.0]);
+      mat4.scale(mvMatrix, [1, 4, 0]);
+      gl.uniformMatrix4fv(glProgram.uMVMatrix, false, mvMatrix);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+
+    function getUniforms() {
+        glProgram.uMVMatrix = gl.getUniformLocation(glProgram, "uMVMatrix");
+        glProgram.uPMatrix = gl.getUniformLocation(glProgram, "uPMatrix");
+        var pMatrix = mat4.create();
+        var ratio = canvas.width/canvas.height;
+        mat4.ortho(-ratio, ratio, -1.0, 1.0, -10.0, 10.0, pMatrix);
+        gl.uniformMatrix4fv(glProgram.uPMatrix, false, pMatrix);
+    }
+
+    var angle = 0.0;
+
+    window.addEventListener('keydown', function(event) {
+      switch (event.keyCode) {
+        case 38: // Up
+          if(window.leader){
+            if(rak1angley<=0.8){
+                window.rak1angley=window.rak1angley+0.09
+            }
+            break;
+          }else{
+            if(window.rak2angley<=0.8){
+                window.rak2angley=window.rak2angley+0.09
+            }
+            break;
+          }
+        case 40: // Down
+          if(window.leader){
+            if(window.rak1angley>=-0.8){
+                window.rak1angley=window.rak1angley-0.09
+            }
+            break;
+          }else{
+            if(window.rak2angley>=-0.8){
+                window.rak2angley=window.rak2angley-0.09
+            }
+            break;
+          }
+      }
+
+
+    }, false);
+
+
+    setInterval(function(){
+      if(window.gc != undefined){
+        if(window.leader){
+
+          var rak1send = {
+            rak1angley: window.rak1angley
+          }
+          window.gc.send(JSON.stringify(rak1send));
+          var ball = {
+            ballanglex: window.ballanglex,
+            ballangley: window.ballangley
+          };
+          window.gc.send(JSON.stringify(ball));
+        }else{
+          var rak2send = {
+            rak2angley: window.rak2angley
+          }
+          window.gc.send(JSON.stringify(rak2send));
+        }
+      }else{
+
+      }
+    },10000);
+</script>
+<!-- 166 para 60 fps -->
+
 </body>
+
+
+
+
+
+
 
 </html>
