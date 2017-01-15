@@ -263,28 +263,18 @@
 
 
     setInterval(function(){
+
       if(window.gc != undefined){
-        if(window.leader){
-
-          var rak1send = {
-            rak1angley: window.rak1angley
-          }
-          window.gc.send(JSON.stringify(rak1send));
-          var ball = {
-            ballanglex: window.ballanglex,
-            ballangley: window.ballangley
-          };
-          window.gc.send(JSON.stringify(ball));
-        }else{
-          var rak2send = {
-            rak2angley: window.rak2angley
-          }
-          window.gc.send(JSON.stringify(rak2send));
+        var datos = {
+          rak1angley: window.rak1angley,
+          rak2angley: window.rak2angley,
+          ballanglex: window.ballanglex,
+          ballangley: window.ballangley
         }
-      }else{
-
+        window.gc.send(JSON.stringify(datos));
       }
-    },10000);
+
+    },166);
 </script>
 <!-- 166 para 60 fps -->
 

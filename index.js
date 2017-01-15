@@ -72,14 +72,7 @@ http.listen(3000, function(){
 
 
 
-/*
 
-socket.on('mess',function(mess){
-  console.log("Mensaje recibido: "+ mess.name+":"+mess.room+"  "+ mess.mess )
-  console.log(socket.room)
-  io.sockets.in(socket.room).emit('update',{name:mess.name ,mess:mess.mess,room:mess.room})
-
-});
 
 
 */

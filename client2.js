@@ -247,38 +247,19 @@ $(document).ready(function(){
 			window.socket.emit('err',error)
 	  })
 	}
-
-
-
 	function gcOnMessage(event){
-		var aux = event.data
-
-		if(aux[rak1angley]!=undefined){
-			window.rak1angley = aux[rak1angley]
-		}else if (aux[rak2angley]!= undefined) {
-			window.rak2angley = aux[rak2angley]
+		aux =JSON.parse(event.data)
+		if(window.leader){
+				window.rak2angley = aux.rak2angley
 		}else{
-			window.ballangley = aux[ballangley]
-			window.ballanglex = aux[ballanglex]
+				window.rak1angley = aux.rak1angley
+				window.ballangley = aux.ballangley
+				window.ballanglex = aux.ballanglex
 		}
+
 	}
-//no esta funcionando como un diccionario  aunque pensaba que si revisar
-/*
 
-	socket.on('ballsend',function(ball){
-	  var aux = JSON.parse(ball);
-	  ballangley = aux.ballangley;
-	  ballanglex = aux.ballanglex;
-	})
 
-	socket.on('racketsend',function(rack){
-	  if(first){
-	    rak2angley = rack;
-	  }else{
-	    rak1angley = rack;
-	  }
-	})
-*/
 
 
 
