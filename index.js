@@ -66,13 +66,3 @@ io.on('connection',function(socket){
 http.listen(3000, function(){
   console.log('listening on *:3000');
 });
-
-
-
-
-
-
-
-
-
-*/

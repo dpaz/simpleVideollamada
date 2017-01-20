@@ -22,7 +22,6 @@
   <button id="login" disabled >Login</button>
   <button id="stop">Stop</button>
   </p>
-  <!--<button id="start" disabled="">Start</button>-->
 
   <br>
   <div>
@@ -98,29 +97,28 @@
         }
     }
     function setupWebGL() {
-        //set the clear color to a shade of green
         gl.clearColor(0.0, 0.0, 0.0, 0.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
   gl.viewport(0, 0, canvas.width, canvas.height);
     }
     function initShaders() {
-        //get shader source
+
         var fs_source = document.getElementById('shader-fs').innerHTML,
          vs_source = document.getElementById('shader-vs').innerHTML;
-        //compile shaders
+
         vertexShader = makeShader(vs_source, gl.VERTEX_SHADER);
         fragmentShader = makeShader(fs_source, gl.FRAGMENT_SHADER);
-        //create program
+
         glProgram = gl.createProgram();
-        //attach and link shaders to the program
+
         gl.attachShader(glProgram, vertexShader);
         gl.attachShader(glProgram, fragmentShader);
         gl.linkProgram(glProgram);
         if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
             alert("Unable to initialize the shader program.");
         }
-        //use program
+
         gl.useProgram(glProgram);
     }
     function makeShader(src, type) {
@@ -135,7 +133,7 @@
     }
     function setupBuffers() {
         var triangleVertices = [
-            //triangle Vertices
+            //Down triangle
             -0.05, 0.05, 0.0,
             0.05, -0.05, 0.0,
             -0.05, -0.05, 0.0,
@@ -149,7 +147,7 @@
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices), gl.STATIC_DRAW);
 
   var triangleColors = [
-            // triangle Colors
+            // triangle Colors all white
             1.0, 1.0, 1.0,
             1.0, 1.0, 1.0,
             1.0, 1.0, 1.0,
@@ -279,11 +277,5 @@
 <!-- 166 para 60 fps -->
 
 </body>
-
-
-
-
-
-
 
 </html>
