@@ -127,7 +127,7 @@
         gl.shaderSource(shader, src);
         gl.compileShader(shader);
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            alert("Error compiling shader: " + gl.getShaderInfoLog(shader));
+            alert(gl.getShaderInfoLog(shader));
         }
         return shader;
     }
@@ -146,7 +146,7 @@
         gl.bindBuffer(gl.ARRAY_BUFFER, trianglesVerticeBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices), gl.STATIC_DRAW);
 
-  var triangleColors = [
+  var colors = [
             // triangle Colors all white
             1.0, 1.0, 1.0,
             1.0, 1.0, 1.0,
@@ -157,7 +157,7 @@
         ];
         trianglesColorBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, trianglesColorBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleColors), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
     }
     function drawScene() {
         vertexPositionAttribute = gl.getAttribLocation(glProgram, "aVertexPosition");
@@ -170,15 +170,16 @@
         gl.bindBuffer(gl.ARRAY_BUFFER, trianglesColorBuffer);
         gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
 
-        drawball()
+        pelota()
         raqueta1()
         raqueta2()
         requestAnimationFrame(drawScene)
     }
 
 
-    function drawball(){
+    function pelota(){
       if(window.leader){
+        //Fisica de la pelota
         if(window.ballangley>=0.95 || window.ballangley<=-0.95){
             window.ballsumy=window.ballsumy*(-1)
         }else if(window.ballanglex>=1.20 || window.ballanglex<=-1.20){
@@ -226,8 +227,6 @@
         gl.uniformMatrix4fv(glProgram.uPMatrix, false, pMatrix);
     }
 
-    var angle = 0.0;
-
     window.addEventListener('keydown', function(event) {
       switch (event.keyCode) {
         case 38: // Up
@@ -255,8 +254,6 @@
             break;
           }
       }
-
-
     }, false);
 
 
